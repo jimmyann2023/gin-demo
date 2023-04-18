@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jimmyann2023/Gin/docs"
+	"github.com/jimmyann2023/Gin/global"
 	"github.com/spf13/viper"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -61,11 +62,11 @@ func InitRouter() {
 	}
 
 	go func() {
+		global.Logger.Info(fmt.Sprintf("Start Listen: %s", Port))
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			// TODO: 记录日志
-			fmt.Println(fmt.Sprintf("Start Server Error: %s", err.Error()))
+			global.Logger.Error(fmt.Sprintf("Start Server Error: %s", err.Error()))
+			return
 		}
-		//fmt.Println(fmt.Sprintf("Start Server Listen: %s", Port))
 	}()
 	<-ctx.Done()
 
@@ -73,11 +74,10 @@ func InitRouter() {
 	defer cancelShutdown()
 
 	if err := server.Shutdown(ctx); err != nil {
-		// TODO:记录日志
-		fmt.Printf("Stop Server Error: %s\n", err.Error())
+		global.Logger.Error(fmt.Sprintf("Stop Server Error: %s", err.Error()))
 		return
 	}
-	fmt.Println("Stop Server Success")
+	global.Logger.Info("Stop Server Success")
 }
 
 func InitBasePlatformRoutes() {

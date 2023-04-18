@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/jimmyann2023/Gin/docs"
 	"github.com/spf13/viper"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 	"os/signal"
 	"syscall"
@@ -17,6 +20,7 @@ var (
 	RouteArray []RouteType
 )
 
+// RegisterRouter 注册路由回调函数
 func RegisterRouter(fn RouteType) {
 	if fn == nil {
 		return
@@ -24,10 +28,14 @@ func RegisterRouter(fn RouteType) {
 	RouteArray = append(RouteArray, fn)
 }
 
+// InitRouter 初始化系统路由
 func InitRouter() {
+
+	// 创建监听 CTR + C , 应用退出信号的上下文
 	ctx, cancelCtx := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancelCtx()
 
+	// 初始化 gin 框架,并注册相关路由
 	r := gin.Default()
 
 	PublicRouter := r.Group("/api/v1/public")
@@ -37,6 +45,10 @@ func InitRouter() {
 	for _, fnRegisterRoute := range RouteArray {
 		fnRegisterRoute(PublicRouter, AuthRouter)
 	}
+
+	// 集成 swagger
+	docs.SwaggerInfo.BasePath = ""
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	Port := viper.GetString("server.port")
 	if Port == "" {
@@ -53,7 +65,7 @@ func InitRouter() {
 			// TODO: 记录日志
 			fmt.Println(fmt.Sprintf("Start Server Error: %s", err.Error()))
 		}
-		//fmt.Println(fmt.Sprintf("Srart Server Listen: %s", Port))
+		//fmt.Println(fmt.Sprintf("Start Server Listen: %s", Port))
 	}()
 	<-ctx.Done()
 

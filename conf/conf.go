@@ -9,8 +9,8 @@ func InitConfig() {
 	viper.SetConfigName("settings")
 	viper.SetConfigType("yml")
 	viper.AddConfigPath("./conf/")
-	err := viper.ReadInConfig()
 
+	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Sprintf("Load Config Error: %s", err.Error()))
 	}

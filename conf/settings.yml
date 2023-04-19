@@ -13,6 +13,10 @@ db:
 redis:
   addr: "127.0.0.1:6379"
 
+jwt:
+  tokenExpire: 24 # token有效时长(小时)
+  signingKey: swujuhsdnkiohkhswu # 签名的秘钥
+
 log:
   MaxSize: 5      # 日志文件最大的尺寸(M), 超限后开始自动分割
   MaxBackups: 10  # 保留旧文件的最大个数

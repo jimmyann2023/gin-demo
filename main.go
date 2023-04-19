@@ -1,8 +1,6 @@
 package main
 
-import (
-	"github.com/jimmyann2023/Gin/cmd"
-)
+import "github.com/jimmyann2023/Gin/cmd"
 
 //@title gin-sagger-demo 开发测试
 //@version 1.0

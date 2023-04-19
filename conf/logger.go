@@ -1,7 +1,6 @@
 package conf
 
 import (
-	"fmt"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -12,11 +11,11 @@ import (
 )
 
 func InitLogger() *zap.SugaredLogger {
-	logLeve := zapcore.DebugLevel
+	LevelEnabler := zapcore.DebugLevel
 	if !viper.GetBool("mode.develop") {
-		logLeve = zapcore.InfoLevel
+		LevelEnabler = zapcore.InfoLevel
 	}
-	core := zapcore.NewCore(getEncoder(), zapcore.NewMultiWriteSyncer(getWriteSyncer(), zapcore.AddSync(os.Stdout)), logLeve)
+	core := zapcore.NewCore(getEncoder(), zapcore.NewMultiWriteSyncer(getWriteSyncer(), zapcore.AddSync(os.Stdout)), LevelEnabler)
 	return zap.New(core).Sugar()
 }
 
@@ -36,13 +35,13 @@ func getWriteSyncer() zapcore.WriteSyncer {
 	setSeparator := string(filepath.Separator)
 	setRootDir, _ := os.Getwd()
 	setLogFilePath := setRootDir + setSeparator + "log" + setSeparator + time.Now().Format(time.DateOnly) + ".txt"
-	fmt.Println(setLogFilePath)
+	//fmt.Println(setLogFilePath)
 
 	lumberjackSyncer := &lumberjack.Logger{
 		Filename:   setLogFilePath,
 		MaxSize:    viper.GetInt("log.MaxSize"),
 		MaxBackups: viper.GetInt("log.MaxBackups"),
-		MaxAge:     viper.GetInt("LOG.MaxAge"),
+		MaxAge:     viper.GetInt("log.MaxAge"),
 		Compress:   true,
 	}
 

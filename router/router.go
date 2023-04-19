@@ -9,7 +9,9 @@ import (
 	"github.com/spf13/viper"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -32,10 +34,6 @@ func RegisterRouter(fn RouteType) {
 // InitRouter 初始化系统路由
 func InitRouter() {
 
-	// 创建监听 CTR + C , 应用退出信号的上下文
-	ctx, cancelCtx := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancelCtx()
-
 	// 初始化 gin 框架,并注册相关路由
 	r := gin.Default()
 
@@ -56,28 +54,33 @@ func InitRouter() {
 		Port = "8999"
 	}
 
-	server := &http.Server{
+	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", Port),
 		Handler: r,
 	}
 
+	// 启动一个 goroutine 来开启web服务，避免主线程的信号监听被阻塞
 	go func() {
 		global.Logger.Info(fmt.Sprintf("Start Listen: %s", Port))
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			global.Logger.Error(fmt.Sprintf("Start Server Error: %s", err.Error()))
-			return
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			global.Logger.Error(fmt.Sprintf("Start Sever Error: %s", err.Error()))
 		}
 	}()
-	<-ctx.Done()
 
-	ctx, cancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelShutdown()
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
 
-	if err := server.Shutdown(ctx); err != nil {
+	// The context is used to inform the server it has 5 seconds to finish
+	// the request it is currently handling
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
 		global.Logger.Error(fmt.Sprintf("Stop Server Error: %s", err.Error()))
-		return
 	}
-	global.Logger.Info("Stop Server Success")
+	global.Logger.Info("Sever exiting")
+
 }
 
 func InitBasePlatformRoutes() {
